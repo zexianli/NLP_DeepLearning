@@ -2,5 +2,5 @@ numpy
 tqdm
 datasets
 matplotlib
-sklearn
+scikit-learn
 nltk

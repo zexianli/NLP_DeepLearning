@@ -1,8 +1,16 @@
 from collections import Counter 
 from re import sub, compile
+import string
+from tokenize import tokenize
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import defaultdict
+
+import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
+
 
 class UnimplementedFunctionError(Exception):
     pass
@@ -43,16 +51,18 @@ class Vocabulary:
         
         """ 
 
-        # REMOVE THIS ONCE YOU IMPLEMENT THIS FUNCTION
+        # tokens = nltk.tokenize.word_tokenize(text)
+        stop_words = set(stopwords.words("english") + list(string.digits))
         tokenizer = RegexpTokenizer(r'\w+')
         tokens = tokenizer.tokenize(text)
-        return tokens
+        filtered_tokens = [t for t in tokens if not t in stop_words]
+        return filtered_tokens
 
 
     ###########################
     ## TASK 1.2            	 ##
     ###########################
-    def build_vocab(self,corpus):
+    def build_vocab(self, corpus):
         """
         
         build_vocab takes in list of strings corresponding to a text corpus, tokenizes the strings, and builds a finite vocabulary
@@ -61,14 +71,34 @@ class Vocabulary:
         - corpus: a list string to build a vocabulary over
 
         :returns: 
-        - word2idx: a dictionary mapping token strings to their numerical index in the dictionary e.g. { "dog": 0, "but":1, ..., "UNK":129}
-        - idx2word: the inverse of word2idx mapping an index in the vocabulary to its word e.g. {0: "dog", 1:"but", ..., 129:"UNK"}
-        - freq: a dictionary of words and frequency counts over the corpus (including words not in the dictionary), e.g. {"dog":102, "the": 18023, ...}
+        - word2idx: a dictionary mapping token strings to their numerical index in the dictionary e.g. { "dog": 0, "but":1, ..., "UNK": 129}
+        - idx2word: the inverse of word2idx mapping an index in the vocabulary to its word e.g. {0: "dog", 1:"but", ..., 129: "UNK"}
+        - freq: a dictionary of words and frequency counts over the corpus (including words not in the dictionary), e.g. {"dog": 102, "the": 18023, ...}
 
         """ 
 
         # REMOVE THIS ONCE YOU IMPLEMENT THIS FUNCTION
-        raise UnimplementedFunctionError("You have not yet implemented build_vocab.")
+        word2idx = defaultdict(int)
+        idx2word = defaultdict(str)
+        freq = defaultdict(int)
+
+        word2idx["UNK"] = 0
+        idx2word["UNK"] = 0
+        
+        idx = 1
+        for string in corpus:
+            tokens = self.tokenize(string)
+            for token in tokens:
+                if token not in word2idx:
+                   word2idx[token] = idx
+                   idx2word[token] = idx
+                   idx += 1
+                
+                freq[token] += 1
+        
+        
+        return word2idx, idx2word, freq    
+        
 
 
     ###########################
@@ -81,7 +111,10 @@ class Vocabulary:
 
         
         """ 
-
         # REMOVE THIS ONCE YOU IMPLEMENT THIS FUNCTION
-        raise UnimplementedFunctionError("You have not yet implemented make_vocab_charts.")
+        
+        sorted_tokens = {k: v for k, v in sorted(self.freq.items(), key=lambda item: item[1], reverse=True)}
+        plt.plot(sorted_tokens.keys(), sorted_tokens.values())
+
+        
 
