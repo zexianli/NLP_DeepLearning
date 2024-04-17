@@ -111,10 +111,12 @@ class Vocabulary:
 
         
         """ 
-        # REMOVE THIS ONCE YOU IMPLEMENT THIS FUNCTION
         
-        sorted_tokens = {k: v for k, v in sorted(self.freq.items(), key=lambda item: item[1], reverse=True)}
+        sorted_tokens = {self.word2idx[k]: v for k, v in sorted(self.freq.items(), key=lambda item: item[1], reverse=True)}
+        # id_freq_pair = {self.word2idx[k]: v for k, v in sorted_tokens.items()}
         plt.plot(sorted_tokens.keys(), sorted_tokens.values())
+        plt.yscale("log")
+        plt.savefig("frequency")
 
         
 
