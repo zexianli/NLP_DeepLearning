@@ -113,10 +113,24 @@ class Vocabulary:
         """  
         
         sorted_tokens = [v for v in sorted(self.freq.values(), reverse=True)]
-        plt.plot(range(0, len(sorted_tokens)), sorted_tokens)
+        id_range = range(0, len(sorted_tokens))
+        
+        plt.plot(id_range, sorted_tokens)
         plt.yscale("log")
         plt.savefig("frequency")
+        plt.clf()
+        plt.close()
         
+        total_freq = sum(sorted_tokens)
+        percentage = np.cumsum(np.array(sorted_tokens) / total_freq)
+        
+        print(total_freq)
+        print(percentage)
+        
+        plt.plot(id_range, percentage)
+        plt.savefig("fraction")
+        plt.clf()
+        plt.close()
         
         
         
