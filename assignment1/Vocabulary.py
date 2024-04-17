@@ -110,13 +110,14 @@ class Vocabulary:
         make_vocab_charts plots word frequency and cumulative coverage charts for this vocabulary. See handout for more details
 
         
-        """ 
+        """  
         
-        sorted_tokens = {self.word2idx[k]: v for k, v in sorted(self.freq.items(), key=lambda item: item[1], reverse=True)}
-        # id_freq_pair = {self.word2idx[k]: v for k, v in sorted_tokens.items()}
-        plt.plot(sorted_tokens.keys(), sorted_tokens.values())
+        sorted_tokens = [v for v in sorted(self.freq.values(), reverse=True)]
+        plt.plot(range(0, len(sorted_tokens)), sorted_tokens)
         plt.yscale("log")
         plt.savefig("frequency")
-
+        
+        
+        
         
 
