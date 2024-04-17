@@ -116,7 +116,10 @@ class Vocabulary:
         id_range = range(0, len(sorted_tokens))
         
         plt.plot(id_range, sorted_tokens)
+        plt.title("Token Frequency Distribution")
+        plt.ylabel("Frequency")
         plt.yscale("log")
+        plt.xlabel("Token ID (sorted by frequency)")
         plt.savefig("frequency")
         plt.clf()
         plt.close()
@@ -124,10 +127,10 @@ class Vocabulary:
         total_freq = sum(sorted_tokens)
         percentage = np.cumsum(np.array(sorted_tokens) / total_freq)
         
-        print(total_freq)
-        print(percentage)
-        
         plt.plot(id_range, percentage)
+        plt.title("Cumulative Fraction Covered")
+        plt.ylabel("Fraction of Token Occurences Covered")
+        plt.xlabel("Token ID (sorted by frequency)")
         plt.savefig("fraction")
         plt.clf()
         plt.close()
