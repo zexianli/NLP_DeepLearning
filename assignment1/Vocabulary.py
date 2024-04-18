@@ -83,20 +83,21 @@ class Vocabulary:
         freq = defaultdict(int)
 
         word2idx["UNK"] = 0
-        idx2word["UNK"] = 0
+        idx2word[0] = "UNK"
         
         idx = 1
-        for string in corpus:
-            tokens = self.tokenize(string)
+        for line in corpus:
+            tokens = self.tokenize(line)
             for token in tokens:
                 if token not in word2idx:
                    word2idx[token] = idx
-                   idx2word[token] = idx
+                   idx2word[idx] = token
                    idx += 1
                 
                 freq[token] += 1
         
-        
+        # print(word2idx)
+        # print(idx2word)
         return word2idx, idx2word, freq    
         
 

@@ -1,4 +1,6 @@
 
+import token
+import tokenize
 from datasets import load_dataset
 from Vocabulary import Vocabulary
 import matplotlib.pyplot as plt
@@ -21,6 +23,8 @@ logging.basicConfig(
 class UnimplementedFunctionError(Exception):
     pass
 
+np.seterr(divide='ignore', invalid='ignore')
+
 
 ###########################
 ## TASK 2.2              ##
@@ -41,8 +45,24 @@ def compute_cooccurrence_matrix(corpus, vocab):
 
         """ 
 
-    # REMOVE THIS ONCE YOU IMPLEMENT THIS FUNCTION
-    raise UnimplementedFunctionError("You have not yet implemented compute_count_matrix.")
+    N = vocab.size
+    C = np.zeros(shape=(N, N))
+    print(N, C.shape)
+    k = 3
+    
+    for line in corpus:
+        tokens = vocab.tokenize(line)
+        
+        for i in range(k, len(tokens) - k):
+            i_word = vocab.word2idx[tokens[i]]
+            
+            for j in range(i - k, i + k):
+                j_word = vocab.word2idx[tokens[j]]
+                C[i_word, j_word] += 1
+    
+    print("Is there any nan in Cooccurrence: ", np.any(np.isnan(C)))
+    return C
+    
     
 
 ###########################
@@ -62,11 +82,21 @@ def compute_ppmi_matrix(corpus, vocab):
         :returns: 
         - PPMI: a N x N matrix where the i,j'th entry is the estimated PPMI from the corpus between token i and j in the vocabulary
 
-        """ 
+    """ 
 
-    # REMOVE THIS ONCE YOU IMPLEMENT THIS FUNCTION
-    raise UnimplementedFunctionError("You have not yet implemented compute_ppmi_matrix.")
+    N = vocab.size
+    C = compute_cooccurrence_matrix(corpus, vocab)
+    print("Is there any nan in PPMI: ", np.any(np.isnan(C)))
+    
+    eps = 0.00001
 
+    PPMI = np.zeros(shape=(N, N))
+    for i in range(N):
+        for j in range(N):
+            PPMI[i, j] = max(0, np.log(((C[i, j] + eps) * N) / ((C[i, i] + eps) * (C[j, j] + eps))))
+
+    print("Is there any nan in PPMI return: ", np.any(np.isnan(PPMI)))
+    return PPMI
 
     
 
@@ -82,7 +112,7 @@ def main_freq():
 
 
     logging.info("Building vocabulary")
-    vocab = Vocabulary(dataset_text)
+    vocab = Vocabulary(dataset_text[:5])
     vocab.make_vocab_charts()
     plt.close()
     plt.pause(0.01)
@@ -129,6 +159,7 @@ def plot_word_vectors_tsne(word_vectors, vocab):
             va='bottom',
             fontsize=5)
     plt.show()
+    plt.savefig("word_vecotrs", format='pdf')
 
 
 if __name__ == "__main__":
