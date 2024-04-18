@@ -47,20 +47,16 @@ def compute_cooccurrence_matrix(corpus, vocab):
 
     N = vocab.size
     C = np.zeros(shape=(N, N))
-    print(N, C.shape)
     k = 3
-    
+
     for line in corpus:
         tokens = vocab.tokenize(line)
-        
         for i in range(k, len(tokens) - k):
             i_word = vocab.word2idx[tokens[i]]
-            
             for j in range(i - k, i + k):
                 j_word = vocab.word2idx[tokens[j]]
                 C[i_word, j_word] += 1
-    
-    print("Is there any nan in Cooccurrence: ", np.any(np.isnan(C)))
+
     return C
     
     
@@ -85,9 +81,7 @@ def compute_ppmi_matrix(corpus, vocab):
     """ 
 
     N = vocab.size
-    C = compute_cooccurrence_matrix(corpus, vocab)
-    print("Is there any nan in PPMI: ", np.any(np.isnan(C)))
-    
+    C = compute_cooccurrence_matrix(corpus, vocab)    
     eps = 0.00001
 
     PPMI = np.zeros(shape=(N, N))
@@ -95,7 +89,6 @@ def compute_ppmi_matrix(corpus, vocab):
         for j in range(N):
             PPMI[i, j] = max(0, np.log(((C[i, j] + eps) * N) / ((C[i, i] + eps) * (C[j, j] + eps))))
 
-    print("Is there any nan in PPMI return: ", np.any(np.isnan(PPMI)))
     return PPMI
 
     
@@ -112,7 +105,7 @@ def main_freq():
 
 
     logging.info("Building vocabulary")
-    vocab = Vocabulary(dataset_text[:5])
+    vocab = Vocabulary(dataset_text[:100])
     vocab.make_vocab_charts()
     plt.close()
     plt.pause(0.01)
@@ -144,6 +137,7 @@ def dim_reduce(PPMI, k=16):
 
 
 def plot_word_vectors_tsne(word_vectors, vocab):
+    word_vectors = np.nan_to_num(word_vectors)
     coords = TSNE(metric="cosine", perplexity=50, random_state=42).fit_transform(word_vectors)
 
     plt.cla()
@@ -158,8 +152,8 @@ def plot_word_vectors_tsne(word_vectors, vocab):
             ha='right',
             va='bottom',
             fontsize=5)
+    plt.savefig("word_vecotrs.pdf")
     plt.show()
-    plt.savefig("word_vecotrs", format='pdf')
 
 
 if __name__ == "__main__":
