@@ -48,14 +48,12 @@ def compute_cooccurrence_matrix(corpus, vocab):
     N = vocab.size
     C = np.zeros(shape=(N, N))
     k = 3
-
-    for line in corpus:
-        tokens = vocab.tokenize(line)
-        for i in range(k, len(tokens) - k):
-            i_word = vocab.word2idx[tokens[i]]
-            for j in range(i - k, i + k):
-                j_word = vocab.word2idx[tokens[j]]
-                C[i_word, j_word] += 1
+    
+    for i in range(k, len(vocab.tokens) - k):
+        i_tk = vocab.word2idx[vocab.tokens[i]]
+        for j in range(i - k, i + k):
+            j_tk = vocab.word2idx[vocab.tokens[j]]
+            C[i_tk, j_tk] += 1
 
     return C
     
@@ -105,7 +103,7 @@ def main_freq():
 
 
     logging.info("Building vocabulary")
-    vocab = Vocabulary(dataset_text[:100])
+    vocab = Vocabulary(dataset_text[:1000])
     vocab.make_vocab_charts()
     plt.close()
     plt.pause(0.01)
@@ -137,7 +135,6 @@ def dim_reduce(PPMI, k=16):
 
 
 def plot_word_vectors_tsne(word_vectors, vocab):
-    word_vectors = np.nan_to_num(word_vectors)
     coords = TSNE(metric="cosine", perplexity=50, random_state=42).fit_transform(word_vectors)
 
     plt.cla()
@@ -152,7 +149,7 @@ def plot_word_vectors_tsne(word_vectors, vocab):
             ha='right',
             va='bottom',
             fontsize=5)
-    plt.savefig("word_vecotrs.pdf")
+    plt.savefig("word_vectors.pdf")
     plt.show()
 
 
