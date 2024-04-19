@@ -48,7 +48,7 @@ def main_glove():
 
     d = 32				# dimensionality of the vectors
     B = 1024			# batch size (in number of word pairs)
-    maxEpoch = 5		# maximum number of epochs
+    maxEpoch = 20		# maximum number of epochs
     learningRate = 0.1	# learning rate / step size for SGD
     clip = 50			# gradient clip value 
     m = 0.9				# moment parameter
@@ -112,16 +112,12 @@ def main_glove():
             # Task 3.2
             ########################################################################
 
-
-            # REMOVE THIS ONCE YOU IMPLEMENT THIS SECTION
-            raise UnimplementedFunctionError("You have not yet implemented the batch gradients.")
-
             # write expressions using numpy to implement the gradients you derive in 3.1. 
-            wordvecs_grad = np.zeros( (bSize,d) )
-            wordbiases_grad = np.zeros( (bSize,1) )
-            contextvecs_grad = np.zeros( (bSize,d) )
-            contextbiases_grad = np.zeros( (bSize,1) )
-
+            wordvecs_grad = 2 * fval * error * c_batch
+            wordbiases_grad = 2 * fval * error
+            contextvecs_grad = 2 * fval * error * w_batch
+            contextbiases_grad = 2 * fval * error
+            
             ########################################################################
     
             assert wordvecs_grad.shape == (bSize,d), "Incorrect dimension, should be (batch_size x d)"

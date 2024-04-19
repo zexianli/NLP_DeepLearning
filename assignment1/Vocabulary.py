@@ -57,7 +57,7 @@ class Vocabulary:
         tokens = tokenizer.tokenize(text)
         filtered_tokens = [t for t in tokens if not t in stop_words]
         
-        self.tokens.extend(filtered_tokens)
+        # self.tokens.extend(filtered_tokens)
         return filtered_tokens
 
 
@@ -83,21 +83,26 @@ class Vocabulary:
         word2idx = defaultdict(int)
         idx2word = defaultdict(str)
         freq = defaultdict(int)
+        unfiltered_tokens = []
         self.tokens = []
         
-        idx = 0
         for line in corpus:
-            tokens = self.tokenize(line)
-            for token in tokens:
-                if token not in word2idx:
-                   word2idx[token] = idx
-                   idx2word[idx] = token
-                   idx += 1
-                
-                freq[token] += 1
+            unfiltered_tokens.extend(self.tokenize(line))
         
-        word2idx["UNK"] = idx
-        idx2word[idx] = "UNK"
+        for tk in unfiltered_tokens:
+            freq[tk] += 1
+        
+        idx = 0
+        for tk in unfiltered_tokens:
+            if freq[tk] < 50:
+                self.tokens.append("UNK")
+            self.tokens.append(tk)
+            
+        for tk in unfiltered_tokens:
+            if tk not in word2idx:
+                word2idx[tk] = idx
+                idx2word[idx] = tk
+                idx += 1
         
         return word2idx, idx2word, freq    
         

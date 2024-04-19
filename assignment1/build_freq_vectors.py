@@ -49,6 +49,7 @@ def compute_cooccurrence_matrix(corpus, vocab):
     C = np.zeros(shape=(N, N))
     k = 3
     
+    print("Size of vocab: ", N)
     for i in range(k, len(vocab.tokens) - k):
         i_tk = vocab.word2idx[vocab.tokens[i]]
         for j in range(i - k, i + k):
@@ -103,7 +104,7 @@ def main_freq():
 
 
     logging.info("Building vocabulary")
-    vocab = Vocabulary(dataset_text[:1000])
+    vocab = Vocabulary(dataset_text[:10000])
     vocab.make_vocab_charts()
     plt.close()
     plt.pause(0.01)
