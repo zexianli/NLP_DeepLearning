@@ -89,12 +89,13 @@ class Vocabulary:
         for line in corpus:
             unfiltered_tokens.extend(self.tokenize(line))
         
+        print("Size unfiltered: ", len(unfiltered_tokens))
         for tk in unfiltered_tokens:
             freq[tk] += 1
         
         idx = 0
         for tk in unfiltered_tokens:
-            if freq[tk] < 50:
+            if freq[tk] < 10:
                 self.tokens.append("UNK")
             self.tokens.append(tk)
             

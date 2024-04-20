@@ -50,6 +50,7 @@ def compute_cooccurrence_matrix(corpus, vocab):
     k = 3
     
     print("Size of vocab: ", N)
+    print("Numb of tokens: ", len(vocab.word2idx))
     for i in range(k, len(vocab.tokens) - k):
         i_tk = vocab.word2idx[vocab.tokens[i]]
         for j in range(i - k, i + k):
