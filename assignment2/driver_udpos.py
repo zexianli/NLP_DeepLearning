@@ -32,7 +32,7 @@ class BiLSTM(nn.Module):
         return tag_scores
     
 
-def train_model(model, train_loader, val_loader, epochs=10, lr=0.001):
+def train_model(model, train_loader, validation_loader, epochs=10, lr=0.001):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.CrossEntropyLoss()  
     training_losses = []
@@ -49,37 +49,32 @@ def train_model(model, train_loader, val_loader, epochs=10, lr=0.001):
             tags = tags.to(device)       
 
             optimizer.zero_grad() 
+            out = model(texts, lengths) 
 
-            outputs = model(texts, lengths) 
-
-            outputs = outputs.view(-1, outputs.shape[-1]) 
+            out = out.view(-1, out.shape[-1]) 
             tags = tags.view(-1)  
 
-            loss = criterion(outputs, tags) 
+            loss = criterion(out, tags) 
             loss.backward()  
             optimizer.step() 
 
-            # Calculate training accuracy
-            _, predicted = torch.max(outputs, 1)
+            _, predicted = torch.max(out, 1)
             correct = (predicted == tags).float().sum()
             total_correct += correct.item()
             total_loss += loss.item() * texts.size(0)
             total_elements += tags.numel()
 
-        avg_loss = total_loss / total_elements
+        test_loss = total_loss / total_elements
         accuracy = total_correct / total_elements
-        print(f"Epoch {epoch + 1}: Training Loss: {avg_loss:.2f}, Training Accuracy: {accuracy:.2f}")
+        print(f"Epoch {epoch + 1}: Training Loss: {test_loss:.2f}, Training Accuracy: {accuracy:.2f}")
 
+        val_loss, val_accuracy = validation(model, validation_loader)
+        print(f"Validation Loss: {val_loss:.2f}, Validation Accuracy: {val_accuracy:.2f}")
 
-        # Evaluate model after each epoch
-        val_loss, val_accuracy = validation_metrics(model, val_loader)
-        print(f"Validation Loss: {val_loss}, Validation Accuracy: {val_accuracy}")
-
-        # keeping track of all the training and val loss to plot it after training
-        training_losses.append(avg_loss)
+        training_losses.append(test_loss)
         validation_losses.append(val_loss)
 
-    plt.plot([i for i in range(1, epochs+1)], training_losses, label='Training Loss', marker='o', color='blue')
+    plt.plot([i for i in range(1, epochs+1)], training_losses, label='Training Loss', marker='o', color='green')
     plt.plot([i for i in range(1, epochs+1)], validation_losses, label='Validation Loss', marker='s', color='red')
 
     plt.xlabel('Epoch')
@@ -88,10 +83,10 @@ def train_model(model, train_loader, val_loader, epochs=10, lr=0.001):
     plt.legend()
 
     plt.show()
-    plt.savefig("udpos.pdf")
+    plt.savefig("udpos.png")
 
 
-def validation_metrics(model, val_loader):
+def validation(model, val_loader):
     model.eval() 
     criterion = torch.nn.CrossEntropyLoss()
     total_loss = 0.0
@@ -120,7 +115,7 @@ def validation_metrics(model, val_loader):
 
     return final_loss, accuracy
 
-def test_metrics(model, test_loader):
+def test(model, test_loader):
     model.eval() 
     criterion = torch.nn.CrossEntropyLoss()
     total_loss = 0.0
@@ -132,27 +127,26 @@ def test_metrics(model, test_loader):
             texts = texts.to(device)
             tags = tags.to(device)
 
-            outputs = model(texts, lengths) 
-
-            # Reshape outputs and tags to compute loss and accuracy
-            outputs = outputs.view(-1, outputs.shape[-1])
+            out = model(texts, lengths) 
+            out = out.view(-1, out.shape[-1])
             tags = tags.view(-1)
 
-            loss = criterion(outputs, tags) 
-            total_loss += loss.item() * texts.size(0) 
+            cur_loss = criterion(out, tags) 
+            total_loss += cur_loss.item() * texts.size(0) 
 
-            # Calculate accuracy
-            _, predicted = torch.max(outputs, 1)
-            correct = (predicted == tags).float().sum()
+            _, prediction = torch.max(out, 1)
+            correct = (prediction == tags).float().sum()
             total_correct += correct.item()
-            total_elements += tags.numel()  # Total number of tags processed
+            total_elements += tags.numel()
 
-    avg_loss = total_loss / total_elements  # Average loss over all validation data
-    accuracy = total_correct / total_elements  # Accuracy over all validation data
+    final_loss = total_loss / total_elements
+    accuracy = total_correct / total_elements
 
-    return avg_loss, accuracy
+    return final_loss, accuracy
 
-# TASK 3.3 
+######################################################################
+# Task 3.3
+######################################################################
 def tag_sentence(tk_vocabulary, tag_vocabulary, model, sentence):
     model.eval()
     tokens = word_tokenize(sentence)
@@ -174,21 +168,18 @@ def tag_sentence(tk_vocabulary, tag_vocabulary, model, sentence):
     print(output_string)
 
 def main():
-    train_dataset = UDPOS(split="train")
-    val_dataset = UDPOS(split="valid")
-    test_dataset = UDPOS(split="test")
+    train_dataset, val_dataset, test_dataset = UDPOS()
     
-    # Build vocabularies 
     tokenizer = get_tokenizer('basic_english')
-    token_vocab = build_vocab_from_iterator(map(tokenizer, (word for entry in train_dataset for word in entry[0])), specials=["<unk>", "<pad>"])
+    vocabulary_tks = build_vocab_from_iterator(map(tokenizer, (word for entry in train_dataset for word in entry[0])), specials=["<unk>", "<pad>"])
     tag_vocab = build_vocab_from_iterator((entry[1] for entry in train_dataset), specials=["<unk>"])
 
-    token_vocab.set_default_index(token_vocab["<unk>"])
+    vocabulary_tks.set_default_index(vocabulary_tks["<unk>"])
     tag_vocab.set_default_index(tag_vocab["<unk>"])
 
     def collate_batch(batch):
-        texts = [b [0] for b in batch ]
-        tags = [b [1] for b in batch ]
+        texts = [b[0] for b in batch]
+        tags = [b[1] for b in batch]
         lengths = torch.tensor([len(text) for text in texts])
 
         texts2 = []
@@ -196,7 +187,7 @@ def main():
         for sentence in texts:
             curr = []
             for word in sentence:
-                curr.append(token_vocab[word])
+                curr.append(vocabulary_tks[word])
             texts2.append(torch.tensor(curr))
 
         for tag_list in tags:
@@ -205,7 +196,7 @@ def main():
                 currr.append(tag_vocab[tag])
             tags2.append(torch.tensor(currr))
 
-        padded_texts = torch.nn.utils.rnn.pad_sequence(texts2, padding_value=token_vocab["<pad>"], batch_first=True)
+        padded_texts = torch.nn.utils.rnn.pad_sequence(texts2, padding_value=vocabulary_tks["<pad>"], batch_first=True)
         padded_tags = torch.nn.utils.rnn.pad_sequence(tags2, padding_value=tag_vocab["<unk>"], batch_first=True)
 
         return padded_texts, padded_tags, lengths
@@ -214,20 +205,18 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, collate_fn=collate_batch)
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=collate_batch)
 
-    model = BiLSTM(len(token_vocab), embed_dim=300, hidden_dim=256, tagset_size=len(tag_vocab)).to(device)
+    model = BiLSTM(len(vocabulary_tks), embed_dim=300, hidden_dim=256, tagset_size=len(tag_vocab)).to(device)
     train_model(model, train_loader, val_loader, epochs=5)
     
-    test_loss, test_accuracy = test_metrics(model, test_loader)
+    test_loss, test_accuracy = test(model, test_loader)
     print(f"Testing Loss: {test_loss:.2f}, Testing Accuracy: {test_accuracy:.2f}")
 
-    
-
     sentence = "The old man the boat."
-    tag_sentence(token_vocab, tag_vocab, model, sentence)
+    tag_sentence(vocabulary_tks, tag_vocab, model, sentence)
     sentence = "The complex houses married and single soldiers and their families."
-    tag_sentence(token_vocab, tag_vocab, model, sentence)
+    tag_sentence(vocabulary_tks, tag_vocab, model, sentence)
     sentence = "The man who hunts ducks out on weekends."
-    tag_sentence(token_vocab, tag_vocab, model, sentence)
+    tag_sentence(vocabulary_tks, tag_vocab, model, sentence)
 
 
 if __name__ == "__main__":

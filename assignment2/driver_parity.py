@@ -39,7 +39,7 @@ def main():
 
     # Build the model and put it on the GPU
     logging.info("Building model")
-    model = ParityLSTM()
+    model = ParityLSTM(4)
     model.to(dev) # move to GPU if cuda is enabled
 
 
