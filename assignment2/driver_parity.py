@@ -1,4 +1,3 @@
-
 # Basic python imports for logging and sequence generation
 import itertools
 import random
@@ -72,7 +71,7 @@ class ParityLSTM(torch.nn.Module) :
         super(ParityLSTM, self).__init__()
         self.hidden_dim = hidden_dim
         self.lstm = torch.nn.LSTM(input_size=1, hidden_size=self.hidden_dim, batch_first=True)
-        self.ll = torch.nn.Linear(self.hidden_dim, 2)
+        self.fc = torch.nn.Linear(self.hidden_dim, 2)
 
 
     # forward runs the model on an B x max_length x 1 tensor and outputs a B x 2 tensor representing a score for 
@@ -91,7 +90,7 @@ class ParityLSTM(torch.nn.Module) :
       input = pack_padded_sequence(x, s, batch_first=True, enforce_sorted=False)
       output, (hidden, cell) = self.lstm(input)
     
-      out = self.ll(hidden[-1])
+      out = self.fc(hidden[-1])
       return out
 
     def __str__(self):
