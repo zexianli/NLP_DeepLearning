@@ -38,13 +38,11 @@ def train_model(model, train_loader, val_loader, epochs=10, lr=0.001):
     training_losses = []
     validation_losses = []
 
-    #  basic training loop
     for epoch in range(epochs):
         total_loss = 0
         total_correct = 0
         total_elements = 0
 
-        # model training
         model.train()
         for texts, tags, lengths in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}"):
             texts = texts.to(device)
@@ -70,7 +68,7 @@ def train_model(model, train_loader, val_loader, epochs=10, lr=0.001):
 
         avg_loss = total_loss / total_elements
         accuracy = total_correct / total_elements
-        print(f"Epoch {epoch + 1}: Training Loss: {avg_loss:.4f}, Training Accuracy: {accuracy:.4f}")
+        print(f"Epoch {epoch + 1}: Training Loss: {avg_loss:.2f}, Training Accuracy: {accuracy:.2f}")
 
 
         # Evaluate model after each epoch
@@ -81,18 +79,16 @@ def train_model(model, train_loader, val_loader, epochs=10, lr=0.001):
         training_losses.append(avg_loss)
         validation_losses.append(val_loss)
 
-    print("Training complete.")
-
     plt.plot([i for i in range(1, epochs+1)], training_losses, label='Training Loss', marker='o', color='blue')
     plt.plot([i for i in range(1, epochs+1)], validation_losses, label='Validation Loss', marker='s', color='red')
 
-    plt.xlabel('Epochs')
+    plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training and Validation Loss Over Epochs')
     plt.legend()
 
     plt.show()
-
+    plt.savefig("udpos.pdf")
 
 
 def validation_metrics(model, val_loader):
@@ -182,10 +178,6 @@ def main():
     val_dataset = UDPOS(split="valid")
     test_dataset = UDPOS(split="test")
     
-    # train_dataset = to_map_style_dataset(train_dataset)
-    # val_dataset = to_map_style_dataset(val_dataset)
-    # test_dataset = to_map_style_dataset(test_dataset
-
     # Build vocabularies 
     tokenizer = get_tokenizer('basic_english')
     token_vocab = build_vocab_from_iterator(map(tokenizer, (word for entry in train_dataset for word in entry[0])), specials=["<unk>", "<pad>"])
@@ -194,7 +186,6 @@ def main():
     token_vocab.set_default_index(token_vocab["<unk>"])
     tag_vocab.set_default_index(tag_vocab["<unk>"])
 
-    # Define the collate function
     def collate_batch(batch):
         texts = [b [0] for b in batch ]
         tags = [b [1] for b in batch ]
@@ -219,27 +210,24 @@ def main():
 
         return padded_texts, padded_tags, lengths
 
-    # Create DataLoader
     train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_batch)
     val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, collate_fn=collate_batch)
     test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=collate_batch)
 
-    # Initialize model
     model = BiLSTM(len(token_vocab), embed_dim=300, hidden_dim=256, tagset_size=len(tag_vocab)).to(device)
-
-    # Train model
     train_model(model, train_loader, val_loader, epochs=5)
-
-    # Evaluate model on test dataset
+    
     test_loss, test_accuracy = test_metrics(model, test_loader)
-    print(f"Testing Loss: {test_loss}, Testing Accuracy: {test_accuracy}")
+    print(f"Testing Loss: {test_loss:.2f}, Testing Accuracy: {test_accuracy:.2f}")
 
     
 
-
-    sentences = ["The old man the boat.", "The complex houses married and single soldiers and their families.", "The man who hunts ducks out on weekends."]
-    for sentence in sentences:
-        tag_sentence(token_vocab, tag_vocab, model, sentence)
+    sentence = "The old man the boat."
+    tag_sentence(token_vocab, tag_vocab, model, sentence)
+    sentence = "The complex houses married and single soldiers and their families."
+    tag_sentence(token_vocab, tag_vocab, model, sentence)
+    sentence = "The man who hunts ducks out on weekends."
+    tag_sentence(token_vocab, tag_vocab, model, sentence)
 
 
 if __name__ == "__main__":
